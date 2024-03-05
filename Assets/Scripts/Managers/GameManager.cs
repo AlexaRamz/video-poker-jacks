@@ -11,8 +11,6 @@ namespace VideoPoker
 
 		UIManager uiManager;
 
-		public bool dealed {get; private set;}
-
 		private List<Card> fullDeck = new List<Card>();
 		List<Card> currentDeck = new List<Card>();
 
@@ -23,16 +21,25 @@ namespace VideoPoker
 		private Sprite[] cardImages;
 
 		private bool started;
+		public bool dealed { get; private set; }
+
+		public struct Result
+		{
+			public string handType;
+			public int prize;
+		}
+
 		void StartGame()
 		{
 			uiManager = transform.parent.Find("UIManager").GetComponent<UIManager>();
+			currentHand = new Card[5];
+			cardHeld = new bool[5];
 			InitializeCards();
 		}
 
+		// Generates all 52 cards of the deck including matching the appropriate image to the card
         private void InitializeCards()
         {
-			currentHand = new Card[5];
-			cardHeld = new bool[5];
 			for (int s = 0; s < 4; s++)
             {
 				for (int r = 0; r < 13; r++)
@@ -55,7 +62,7 @@ namespace VideoPoker
 			}
 			if (!dealed)
             {
-				// Deal: Give 5 random cards for the hand
+				// Deal: Draw 5 random cards for the hand
 				for (int i = 0; i < 5; i++)
                 {
 					int randIndex = Random.Range(0, currentDeck.Count);
@@ -83,9 +90,12 @@ namespace VideoPoker
 				// Calculate the result
 				Result result = CalculatePayoff();
 				uiManager.DisplayResult(result);
+
+				// Update the balance
 				currentBalance += result.prize;
 				uiManager.DisplayBalance(currentBalance);
 
+				// Reset the deck back to full
 				currentDeck.Clear();
 				foreach (Card card in fullDeck)
 				{
@@ -100,12 +110,6 @@ namespace VideoPoker
 			cardHeld[cardNo] = !cardHeld[cardNo];
 			return cardHeld[cardNo];
 		}
-
-		public struct Result
-        {
-			public string handType;
-			public int prize;
-        }
 
 		public Result CalculatePayoff()
         {
@@ -146,7 +150,7 @@ namespace VideoPoker
 			return new Result { prize = 0};
 		}
 
-		// Returns the counts for all the ranks in the current hand
+		// Returns the counts for all the ranks in the hand
 		private Dictionary<int, int> GetCounts(Card[] hand)
         {
 			Dictionary<int, int> counts = new Dictionary<int, int>();
